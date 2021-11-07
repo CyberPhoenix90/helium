@@ -1,0 +1,18 @@
+{
+    "version": "1.0.0",
+    "clientOut": [
+        {
+            "namespace": "helium_test_client",
+            "platform": "javascript",
+            "path": "js-client"
+        }
+    ],
+    "serverOut": [
+        {
+            "namespace": "helium_test_server",
+            "platform": "nodejs",
+            "path": "js-server"
+        }
+    ],
+    "include": ["src/**/*.he"]
+}

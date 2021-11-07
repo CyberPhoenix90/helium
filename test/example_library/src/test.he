@@ -1,0 +1,59 @@
+import { TestType as AliasedTestType, ExternalTestMessage } from './second';
+
+export const someStuff:string = "3";
+
+type MyType = string | int;
+
+export message TestMessage {
+  //  1 -> oneof start {
+  //      1 -> time:int = 0;
+  //      2 -> commit:string = null;
+  //  } 
+    2 -> hello:string;
+    3 -> world:string = someStuff;
+    @min(3)
+    // 4 -> a:MyType = 2;
+    5 -> b:int[] = [1,2,3];
+    6 -> c:string[] = ["1","2","3"];
+    7 -> hexNumber:long = 0xDEADBEEF; 
+    8 -> floatNumber:float = 1.0f;
+    9 -> doubleNumber:double = 1.0;
+    10 -> bool:boolean = true;
+    11 -> bytes:byte[] = null;
+   12 -> subMessage:SubMessage = null;
+}
+
+message SubMessage extends ExternalTestMessage {
+    1 -> someField:AliasedTestType;
+}
+
+//Comments
+export enum MyEnum {
+    a = 1;
+    b = 2;
+    c = 3;
+    d = 41;
+}
+/*
+    Multiline comments
+*/
+export enum MyStringEnum {
+    a = `1`;
+    b = '2';
+    c = "3";
+}
+
+export message BadRequest {
+    1 -> error:string;
+}
+
+export message NotAllowed {
+    1 -> error:string;
+}
+
+export service MyService {
+    const randomServiceInfoThatGeneratedAsAStaticVariable:string = "2134";
+	@meta(['policy or something'])
+	http reportMetric(TestMessage):void throws BadRequest | NotAllowed;
+}
+

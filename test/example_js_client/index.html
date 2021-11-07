@@ -1,0 +1,19 @@
+<html>
+	<head>
+		<title>Helium Test Client</title>
+	</head>
+    <body>
+        <script src="node_modules/requirejs/require.js"></script>
+        <script>
+            require.jsExtRegExp = /^\/|:|\?$/;
+            require.config({
+                paths: {
+                    helium_client_rt: "node_modules/helium_client_rt/dist/helium_runtime",
+                    helium_test_client: "node_modules/helium_test_client/helium_test_client",
+                },
+            });
+            require(["./dist/main"], (mainModule) => mainModule.main());
+        </script>
+
+    </body>
+</html>

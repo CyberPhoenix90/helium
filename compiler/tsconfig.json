@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "CommonJS",
+		"newLine": "LF",
+		"target": "ESNext",
+		"noUnusedLocals": true,
+		"declarationMap": true,
+		"jsxFactory": "Aurum.factory",
+        "jsxFragmentFactory": "Aurum.fragment",
+        "jsx": "react",
+		"declaration": true,
+		"inlineSources": true,
+		"sourceMap": true,
+		"resolveJsonModule": true,
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"outDir": "dist",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node",
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"]
+}

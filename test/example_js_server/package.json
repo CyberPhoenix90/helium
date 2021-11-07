@@ -1,0 +1,17 @@
+{
+	"name": "helium_test_client",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/main.js",
+	"scripts": {
+		"postinstall": "npm link helium_test_client helium_client_rt"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@types/express": "^4.17.13",
+		"express": "^4.17.1",
+		"requirejs": "^2.3.6"
+	}
+}

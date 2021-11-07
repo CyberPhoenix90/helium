@@ -1,0 +1,250 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "helium",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#types"
+		},
+		{
+			"include": "#operator"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#stringsDouble"
+		},
+		{
+			"include": "#stringsSingle"
+		},
+		{
+			"include": "#stringsTemplate"
+		},
+		{
+			"include": "#numberLiterals"
+		},
+		{
+			"include": "#hexNumberLiterals"
+		},
+		{
+			"include": "#members"
+		},
+		{
+			"include": "#annotations"
+		}
+	],
+	"repository": {
+		"members": {
+			"patterns": [
+				{
+					"match": "\\b(enum)\\s([\\w]+)",
+					"captures": {
+						"1": {
+							"name": "storage.type"
+						},
+						"2": {
+							"name": "entity.name.type.enum"
+						}
+					}
+				},
+				{
+					"match": "\\b(type)\\s([\\w]+)",
+					"captures": {
+						"1": {
+							"name": "storage.type"
+						},
+						"2": {
+							"name": "entity.name.type.enum"
+						}
+					}
+				},
+				{
+					"match": "\\b(message)\\s([\\w]+)\\s((extends)\\s+([\\w]+))?",
+					"captures": {
+						"1": {
+							"name": "storage.type"
+						},
+						"2": {
+							"name": "entity.name.type.enum"
+						},
+						"4": {
+							"name": "keyword.control.helium"
+						},
+						"5": {
+							"name": "entity.name.type.enum"
+						}
+					}
+				},
+				{
+					"match": "\\b(service)\\s([\\w]+)",
+					"captures": {
+						"1": {
+							"name": "storage.type"
+						},
+						"2": {
+							"name": "entity.name.type.enum"
+						}
+					}
+				}
+			]
+		},
+
+		"comments": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "meta.toc-list.banner.block.helium"
+						}
+					},
+					"match": "^/\\* =(\\s*.*?)\\s*= \\*/$\\n?",
+					"name": "comment.block.helium"
+				},
+				{
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.helium"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.helium"
+						}
+					},
+					"name": "comment.block.helium"
+				},
+				{
+					"match": "\\*/.*\\n",
+					"name": "invalid.illegal.stray-comment-end.helium"
+				},
+				{
+					"captures": {
+						"1": {
+							"name": "meta.toc-list.banner.line.helium"
+						}
+					},
+					"match": "^// =(\\s*.*?)\\s*=\\s*$\\n?",
+					"name": "comment.line.banner.helium"
+				},
+				{
+					"begin": "(^[ \\t]+)?(?=//)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.whitespace.comment.leading.helium"
+						}
+					},
+					"end": "(?!\\G)",
+					"patterns": [
+						{
+							"begin": "//",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.helium"
+								}
+							},
+							"end": "\\n",
+							"name": "comment.line.double-slash.helium",
+							"patterns": [
+								{
+									"match": "(?>\\\\\\s*\\n)",
+									"name": "punctuation.separator.continuation.helium"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.helium",
+					"match": "\\b(import|oneof|export|as|from|const|http|ws|tcp|client|throws|null|true|false)\\b"
+				}
+			]
+		},
+		"annotations": {
+			"patterns": [
+				{
+					"match": "@(min|max|deprecated|obsolete|meta|reject|match|)",
+					"captures": {
+						"1": {
+							"name": "support.function"
+						}
+					}
+				}
+			]
+		},
+		"types": {
+			"patterns": [
+				{
+					"name": "support.type.helium",
+					"match": "\\b(int|short|boolean|long|byte|void|ushort|uint|ulong|float|double|date|Map|Set|string)\\b"
+				}
+			]
+		},
+		"numberLiterals": {
+			"patterns": [
+				{
+					"name": "constant.numeric",
+					"match": "\\b(\\d)+\\.?(\\d)*[f|F|l|L]?\\b"
+				}
+			]
+		},
+		"hexNumberLiterals": {
+			"patterns": [
+				{
+					"name": "constant.numeric",
+					"match": "\\b0[xX][0-9a-fA-F]+[L|l]?\\b"
+				}
+			]
+		},
+		"operator": {
+			"patterns": [
+				{
+					"name": "keyword.operator",
+					"match": "(->|:|=|\\|)"
+				}
+			]
+		},
+		"stringsDouble": {
+			"name": "string.quoted.double.helium",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.helium",
+					"match": "\\\\."
+				}
+			]
+		},
+		"stringsSingle": {
+			"name": "string.quoted.single.helium",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.helium",
+					"match": "\\\\."
+				}
+			]
+		},
+		"stringsTemplate": {
+			"name": "string.quoted.template.helium",
+			"begin": "`",
+			"end": "`",
+			"patterns": [
+				{
+					"name": "constant.character.escape.helium",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.helium"
+}

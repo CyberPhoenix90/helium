@@ -1,0 +1,15 @@
+{
+	"name": "helium_test_server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"postinstall": "npm link helium_test_client helium_client_rt"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"requirejs": "^2.3.6"
+	}
+}

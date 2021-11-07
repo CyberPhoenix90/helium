@@ -1,0 +1,35 @@
+{
+	"name": "helium-language",
+	"displayName": "helium-language",
+	"description": "Add vscode support for the helium language",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.52.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "helium",
+				"aliases": [
+					"helium",
+					"helium"
+				],
+				"extensions": [
+					".helium",
+					".he"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "helium",
+				"scopeName": "source.helium",
+				"path": "./syntaxes/helium.tmLanguage.json"
+			}
+		]
+	}
+}

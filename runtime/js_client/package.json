@@ -1,0 +1,13 @@
+{
+	"name": "helium_client_rt",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/helium_runtime.js",
+	"typings": "dist/helium_runtime.d.ts",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "strict": true,
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "declaration": true,
+        "removeComments": false,
+        "outDir": "dist",
+        "noEmitOnError": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+}
