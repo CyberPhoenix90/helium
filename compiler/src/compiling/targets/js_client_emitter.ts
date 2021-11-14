@@ -1,61 +1,51 @@
-import { join, parse, relative } from "path";
-import { Output } from "../../config/config";
+import { join, parse, relative } from 'path';
+import { Output } from '../../config/config';
 import {
-	ConstDeclaration,
-	EnumDeclaration,
-	ImportSpecifier,
-	ImportStatement,
-	MessageDeclaration,
-	ServiceApiCall,
-	ServiceDeclaration,
-	TypeAliasDeclaration,
-	TypeLiteral
-} from "../../parsing/ast/ast";
-import { getDeclarations } from "../../utils/ast_utils";
-import { Emitter, EmitterInput, ParsedFile } from "../emitter";
-import { emitEnum } from "./js_shared/emit_enum";
-import {
-	emitExpression,
-	emitIdentifier, emitTypeExpression
-} from "./js_shared/emit_expression";
-import {
-	emitExported,
-	emitMessageDeclaration,
-	emitMessageFactory,
-	emitMessageFactoryDts
-} from "./js_shared/emit_message";
-import { emitPackageJson } from "./js_shared/emit_packagejson";
+    ConstDeclaration,
+    EnumDeclaration,
+    ImportSpecifier,
+    ImportStatement,
+    MessageDeclaration,
+    ServiceApiCall,
+    ServiceDeclaration,
+    TypeAliasDeclaration,
+    TypeExpression,
+    TypeLiteral,
+} from '../../parsing/ast/ast';
+import { getDeclarations } from '../../utils/ast_utils';
+import { Emitter, EmitterInput, ParsedFile } from '../emitter';
+import { emitConstDeclaration, emitEnum } from './js_shared/emit_enum';
+import { emitExpression, emitIdentifier, emitTypeExpression } from './js_shared/emit_expression';
+import { emitExported, emitMessageDeclaration, emitMessageFactory, emitMessageFactoryDts } from './js_shared/emit_message';
+import { emitPackageJson } from './js_shared/emit_packagejson';
 
 export class JsClientEmitter extends Emitter {
-  private input: EmitterInput;
-  private resolveImport: (src: string, path: string) => ParsedFile;
+    private input: EmitterInput;
+    private resolveImport: (src: string, path: string) => ParsedFile;
 
-  public emitModule(
-    input: EmitterInput,
-    resolveImport: (src: string, path: string) => ParsedFile
-  ): Output[] {
-    this.input = input;
-    this.resolveImport = resolveImport;
+    public emitModule(input: EmitterInput, resolveImport: (src: string, path: string) => ParsedFile): Output[] {
+        this.input = input;
+        this.resolveImport = resolveImport;
 
-    const jsOutput: Output = {
-      fileContent: "",
-      filePath: join(input.outDir, input.emitConfig.namespace + ".js"),
-    };
+        const jsOutput: Output = {
+            fileContent: '',
+            filePath: join(input.outDir, input.emitConfig.namespace + '.js'),
+        };
 
-    const dtsOutput: Output = {
-      fileContent: "",
-      filePath: join(input.outDir, input.emitConfig.namespace + ".d.ts"),
-    };
+        const dtsOutput: Output = {
+            fileContent: '',
+            filePath: join(input.outDir, input.emitConfig.namespace + '.d.ts'),
+        };
 
-    jsOutput.fileContent = this.emitJs(input);
-    dtsOutput.fileContent = this.emitDts(input);
+        jsOutput.fileContent = this.emitJs(input);
+        dtsOutput.fileContent = this.emitDts(input);
 
-    return [jsOutput, dtsOutput, emitPackageJson(input)];
-  }
+        return [jsOutput, dtsOutput, emitPackageJson(input)];
+    }
 
-  private emitJs(input: EmitterInput): string {
-    const lines = [
-      `(function (factory) {
+    private emitJs(input: EmitterInput): string {
+        const lines = [
+            `(function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports, require('helium_client_rt'));
         if (v !== undefined) module.exports = v;
@@ -64,50 +54,36 @@ export class JsClientEmitter extends Emitter {
     }
 })(function (require, exports, helium_client_rt) {
 	const __ns = \`${this.input.emitConfig.namespace}\`;\n`,
-    ];
+        ];
 
-    for (const file of input.files) {
-      lines.push(this.emitFile(file));
+        for (const file of input.files) {
+            lines.push(this.emitFile(file));
+        }
+
+        lines.push(`\n});`);
+        return lines.join('\n');
     }
 
-    lines.push(`\n});`);
-    return lines.join("\n");
-  }
-
-  private emitFile(file: ParsedFile): string {
-    const lines = [];
-    for (const statement of file.ast.statements) {
-      if (
-        statement.nodeType === "serviceDeclaration" &&
-        (statement as ServiceDeclaration).isExported
-      ) {
-        lines.push(this.emitService(statement as ServiceDeclaration, false));
-      } else if (
-        statement.nodeType === "enumDeclaration" &&
-        (statement as EnumDeclaration).isExported
-      ) {
-        lines.push(emitEnum(statement as EnumDeclaration, false));
-      } else if (
-        statement.nodeType === "constDeclaration" &&
-        (statement as ConstDeclaration).isExported
-      ) {
-        lines.push(
-          this.emitConstDeclaration(statement as ConstDeclaration, false)
-        );
-      } else if (
-        statement.nodeType === "messageDeclaration" &&
-        (statement as MessageDeclaration).isExported
-      ) {
-        lines.push(emitMessageFactory(statement as MessageDeclaration));
-      }
+    private emitFile(file: ParsedFile): string {
+        const lines = [];
+        for (const statement of file.ast.statements) {
+            if (statement.nodeType === 'serviceDeclaration' && (statement as ServiceDeclaration).isExported) {
+                lines.push(this.emitService(statement as ServiceDeclaration, false));
+            } else if (statement.nodeType === 'enumDeclaration' && (statement as EnumDeclaration).isExported) {
+                lines.push(emitEnum(statement as EnumDeclaration, false));
+            } else if (statement.nodeType === 'constDeclaration' && (statement as ConstDeclaration).isExported) {
+                lines.push(emitConstDeclaration(statement as ConstDeclaration, false));
+            } else if (statement.nodeType === 'messageDeclaration') {
+                lines.push(emitMessageFactory(statement as MessageDeclaration));
+            }
+        }
+        return lines.join('\n');
     }
-    return lines.join("\n");
-  }
 
-  private emitDts(input: EmitterInput): string {
-    const lines = [];
+    private emitDts(input: EmitterInput): string {
+        const lines = [];
 
-    lines.push(`
+        lines.push(`
 		declare interface ValidationError<P, T> {
 			/**
 			 * Nature of the error
@@ -177,182 +153,143 @@ export class JsClientEmitter extends Emitter {
 		}
 
 		`);
-    for (const file of input.files) {
-      lines.push([`declare module "${this.createNamespace(file.path)}" {`]);
-      lines.push(...this.emitDtsFile(file));
-      lines.push("}");
-      lines.push("");
-    }
-
-    lines.push([`declare module "${input.emitConfig.namespace}" {`]);
-    for (const file of input.files) {
-      const declarations = getDeclarations(file.ast);
-      for (const declaration of declarations) {
-        if (declaration.isExported) {
-          lines.push(
-            `    ${emitExported(declaration, true)}{ ${
-              declaration.identifier.value
-            } } from "${this.createNamespace(file.path)}";`
-          );
-          if (declaration.nodeType === "messageDeclaration") {
-            lines.push(
-              `    ${emitExported(declaration, true)}{ ${
-                declaration.identifier.value
-              }Factory } from "${this.createNamespace(file.path)}";`
-            );
-          }
+        for (const file of input.files) {
+            lines.push([`declare module "${this.createNamespace(file.path)}" {`]);
+            lines.push(...this.emitDtsFile(file));
+            lines.push('}');
+            lines.push('');
         }
-      }
+
+        lines.push([`declare module "${input.emitConfig.namespace}" {`]);
+        for (const file of input.files) {
+            const declarations = getDeclarations(file.ast);
+            for (const declaration of declarations) {
+                if (declaration.isExported) {
+                    lines.push(`    ${emitExported(declaration, true)}{ ${declaration.identifier.value} } from "${this.createNamespace(file.path)}";`);
+                    if (declaration.nodeType === 'messageDeclaration') {
+                        lines.push(
+                            `    ${emitExported(declaration, true)}{ ${declaration.identifier.value}Factory } from "${this.createNamespace(file.path)}";`
+                        );
+                    }
+                }
+            }
+        }
+        lines.push('}');
+
+        return lines.join('\n');
     }
-    lines.push("}");
 
-    return lines.join("\n");
-  }
-
-  private createNamespace(filePath: string): string {
-    return `${this.input.emitConfig.namespace}/${relative(
-      this.input.cwd,
-      join(parse(filePath).dir, parse(filePath).name)
-    )}`;
-  }
-
-  private emitDtsFile(file: ParsedFile): string[] {
-    const lines = [];
-    for (const statement of file.ast.statements) {
-      switch (statement.nodeType) {
-        case "enumDeclaration":
-          lines.push(emitEnum(statement as EnumDeclaration, true));
-          break;
-        case "constDeclaration":
-          lines.push(
-            this.emitConstDeclaration(statement as ConstDeclaration, true)
-          );
-          break;
-        case "messageDeclaration":
-          lines.push(emitMessageDeclaration(statement as MessageDeclaration));
-          lines.push(emitMessageFactoryDts(statement as MessageDeclaration));
-          break;
-        case "typeAliasDeclaration":
-          lines.push(this.emitTypeAlias(statement as TypeAliasDeclaration));
-          break;
-        case "serviceDeclaration":
-          lines.push(this.emitService(statement as ServiceDeclaration, true));
-          break;
-        case "import":
-          lines.push(this.emitImport(statement as ImportStatement, true));
-          break;
-      }
+    private createNamespace(filePath: string): string {
+        return `${this.input.emitConfig.namespace}/${relative(this.input.cwd, join(parse(filePath).dir, parse(filePath).name))}`;
     }
-    return lines;
-  }
 
-  private emitImport(ast: ImportStatement, dts: boolean): string {
-    return `	import { ${this.emitImportSpecifiers(
-      ast.importSpecifiers
-    )} } from "${this.createNamespace(
-      this.resolveImport(ast.root.file, ast.importedFilePath).path
-    )}";`;
-  }
-
-  private emitImportSpecifiers(ast: ImportSpecifier[]): string {
-    return ast
-      .map((specifier) =>
-        specifier.originalName
-          ? `${specifier.originalName.value} as ${specifier.identifier.value}`
-          : specifier.identifier.value
-      )
-      .join(", ");
-  }
-
-  private emitService(ast: ServiceDeclaration, dts: boolean): string {
-    const serviceName = ast.identifier.value;
-
-    if (dts) {
-      return (
-        `${emitExported(ast, dts)}class ${ast.identifier.value} \n{` +
-        `${ast.constants
-          .map((constant) => this.emitServiceConstant(constant, dts))
-          .join("\n")}\n` +
-        `${ast.apiCalls
-          .map((call) => this.emitServiceApiCall(serviceName, call, dts))
-          .join("\n")}\n` +
-        `	}`
-      );
-    } else {
-      return (
-        `class ${ast.identifier.value} {\n` +
-        `${ast.constants
-          .map((constant) => this.emitServiceConstant(constant, dts))
-          .join("\n")}\n` +
-        `${ast.apiCalls
-          .map((call) => this.emitServiceApiCall(serviceName, call, dts))
-          .join("\n")}\n` +
-        `	}\n` +
-        `exports.${ast.identifier.value} = ${ast.identifier.value};\n`
-      );
+    private emitDtsFile(file: ParsedFile): string[] {
+        const lines = [];
+        for (const statement of file.ast.statements) {
+            switch (statement.nodeType) {
+                case 'enumDeclaration':
+                    lines.push(emitEnum(statement as EnumDeclaration, true));
+                    break;
+                case 'constDeclaration':
+                    lines.push(emitConstDeclaration(statement as ConstDeclaration, true));
+                    break;
+                case 'messageDeclaration':
+                    lines.push(emitMessageDeclaration(statement as MessageDeclaration));
+                    lines.push(emitMessageFactoryDts(statement as MessageDeclaration));
+                    break;
+                case 'typeAliasDeclaration':
+                    lines.push(this.emitTypeAlias(statement as TypeAliasDeclaration));
+                    break;
+                case 'serviceDeclaration':
+                    lines.push(this.emitService(statement as ServiceDeclaration, true));
+                    break;
+                case 'import':
+                    lines.push(this.emitImport(statement as ImportStatement, true));
+                    break;
+            }
+        }
+        return lines;
     }
-  }
 
-  private emitServiceConstant(
-    constant: ConstDeclaration,
-    dts: boolean
-  ): string {
-    return `	${dts ? `public ` : ``}static ${
-      dts ? `readonly ` : ``
-    } ${emitIdentifier(constant.identifier)}${
-      dts ? `: ${emitTypeExpression(constant.type)}` : ""
-    } ${dts ? "" : ` = ${emitExpression(constant.value)}`};`;
-  }
+    private emitImport(ast: ImportStatement, dts: boolean): string {
+        return `	import { ${this.emitImportSpecifiers(ast.importSpecifiers)} } from "${this.createNamespace(
+            this.resolveImport(ast.root.file, ast.importedFilePath).path
+        )}";`;
+    }
 
-  private emitServiceApiCall(
-    serviceName: string,
-    call: ServiceApiCall,
-    dts: boolean
-  ): string {
-    const callArg = emitTypeExpression(call.argument);
+    private emitImportSpecifiers(ast: ImportSpecifier[]): string {
+        return ast
+            .map((specifier) => (specifier.originalName ? `${specifier.originalName.value} as ${specifier.identifier.value}` : specifier.identifier.value))
+            .join(', ');
+    }
 
-    return `	${dts ? `public ` : ``}static ${emitIdentifier(call.identifier)}(${
-      callArg !== "void" ? `body${dts ? `: ${callArg}` : ""}` : ""
-    })${
-      dts
-        ? `:Promise<{response?: ${emitTypeExpression(
-            call.returnType
-          )}, error?: ${
-            call.errorType ? emitTypeExpression(call.errorType) : "Error"
-          }}>`
-        : this.emitApiCallImplementation(serviceName, call)
-    }`;
-  }
+    private emitService(ast: ServiceDeclaration, dts: boolean): string {
+        const serviceName = ast.identifier.value;
 
-  private emitApiCallImplementation(serviceName: string, call: ServiceApiCall) {
-    return `{
+        if (dts) {
+            return (
+                `${emitExported(ast, dts)}class ${ast.identifier.value} \n{` +
+                `${ast.constants.map((constant) => this.emitServiceConstant(constant, dts)).join('\n')}\n` +
+                `${ast.apiCalls.map((call) => this.emitServiceApiCall(serviceName, call, dts)).join('\n')}\n` +
+                `	}`
+            );
+        } else {
+            return (
+                `class ${ast.identifier.value} {\n` +
+                `${ast.constants.map((constant) => this.emitServiceConstant(constant, dts)).join('\n')}\n` +
+                `${ast.apiCalls.map((call) => this.emitServiceApiCall(serviceName, call, dts)).join('\n')}\n` +
+                `	}\n` +
+                `exports.${ast.identifier.value} = ${ast.identifier.value};\n`
+            );
+        }
+    }
+
+    private emitServiceConstant(constant: ConstDeclaration, dts: boolean): string {
+        return `	${dts ? `public ` : ``}static ${dts ? `readonly ` : ``} ${emitIdentifier(constant.identifier)}${
+            dts ? `: ${emitTypeExpression(constant.type)}` : ''
+        } ${dts ? '' : ` = ${emitExpression(constant.value)}`};`;
+    }
+
+    private emitServiceApiCall(serviceName: string, call: ServiceApiCall, dts: boolean): string {
+        const callArg = emitTypeExpression(call.argument);
+
+        return `	${dts ? `public ` : ``}static ${emitIdentifier(call.identifier)}(${callArg !== 'void' ? `body${dts ? `: ${callArg}` : ''}` : ''})${
+            dts
+                ? `:Promise<{response?: ${emitTypeExpression(call.returnType)}, error?: ${call.errorType ? emitTypeExpression(call.errorType) : 'Error'}}>`
+                : this.emitApiCallImplementation(serviceName, call)
+        }`;
+    }
+
+    private emitApiCallImplementation(serviceName: string, call: ServiceApiCall) {
+        return `{
 			${
-        call.argument.nodeType === "typeUnionExpression" ||
-        (call.argument as TypeLiteral).type.type !== "void"
-          ? this.emitPostCall(serviceName, call)
-          : this.emitGetCall(serviceName, call)
-      }
+                call.argument.nodeType === 'typeUnionExpression' || (call.argument as TypeLiteral).type.type !== 'void'
+                    ? this.emitPostCall(serviceName, call)
+                    : this.emitGetCall(serviceName, call)
+            }
 		}`;
-  }
+    }
 
-  private emitGetCall(serviceName: string, call: ServiceApiCall): string {
-    return `helium_client_rt.heliumHttpget(\`${serviceName}\`, \`${call.identifier.value}\`, __ns);`;
-  }
+    private emitGetCall(serviceName: string, call: ServiceApiCall): string {
+        return `helium_client_rt.heliumHttpget(\`${serviceName}\`, \`${call.identifier.value}\`, __ns);`;
+    }
 
-  private emitPostCall(serviceName: string, call: ServiceApiCall): string {
-    return `helium_client_rt.heliumHttpPost(\`${serviceName}\`, \`${call.identifier.value}\`, __ns, body);`;
-  }
+    private emitPostCall(serviceName: string, call: ServiceApiCall): string {
+        return `helium_client_rt.heliumHttpPost(\`${serviceName}\`, \`${call.identifier.value}\`, __ns, body, ${this.typeToFactory(
+            call.argument
+        )}, ${this.typeToFactory(call.returnType)}, ${this.typeToFactory(call.errorType)});`;
+    }
 
-  private emitTypeAlias(ast: TypeAliasDeclaration): string {
-    return `	${emitExported(ast, true)}type ${
-      ast.identifier.value
-    } = ${emitTypeExpression(ast.type)};`;
-  }
+    private typeToFactory(type: TypeExpression): string {
+        const typeText = emitTypeExpression(type);
+        if (typeText !== 'void') {
+            return `exports.${typeText}Factory`;
+        } else {
+            return 'undefined';
+        }
+    }
 
-  private emitConstDeclaration(ast: ConstDeclaration, dts: boolean): string {
-    return `	${emitExported(ast, dts)}${dts ? "const " : ""}${
-      ast.identifier.value
-    }${dts ? `: ${emitTypeExpression(ast.type)}` : ""}${
-      dts ? "" : ` = ${emitExpression(ast.value)};`
-    }`;
-  }
+    private emitTypeAlias(ast: TypeAliasDeclaration): string {
+        return `	${emitExported(ast, true)}type ${ast.identifier.value} = ${emitTypeExpression(ast.type)};`;
+    }
+}

@@ -81,7 +81,6 @@ The syntax is as close to typescript as possible while incorporating things that
 -   Type unions
 -   Generation of validation code
 -   Server side runtime library for Nodejs
--   Compiling to server library for Nodejs
 -   JVM compile target
 -   CIL compile target
 -   Sharing helium code by importing it in one helium project from another helium project

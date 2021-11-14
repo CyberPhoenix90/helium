@@ -24,7 +24,7 @@ export message TestMessage {
 }
 
 message SubMessage extends ExternalTestMessage {
-    1 -> someField:AliasedTestType;
+    1 -> someField:int;
 }
 
 //Comments
@@ -54,6 +54,6 @@ export message NotAllowed {
 export service MyService {
     const randomServiceInfoThatGeneratedAsAStaticVariable:string = "2134";
 	@meta(['policy or something'])
-	http reportMetric(TestMessage):void throws BadRequest | NotAllowed;
+	http reportMetric(TestMessage):void throws NotAllowed;
 }
 
