@@ -246,7 +246,7 @@ function emitOneOfMessageMemberToBinary(ast: OneOfMessageMember): string {
 
 function emitReadType(typeValue: TypeReference, prefix: string): string {
     if (typeValue.type === undefined) {
-        return `exports.${typeValue.identifier.value}Factory.fromBinary(binaryReader, result)`;
+        return `${prefix}exports.${typeValue.identifier.value}Factory.fromBinary(binaryReader, result)`;
     }
 
     switch (typeValue.type) {
