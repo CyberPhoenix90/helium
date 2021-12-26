@@ -12,7 +12,7 @@ import {
     TypeExpression,
     TypeLiteral,
 } from '../../parsing/ast/ast';
-import { getDeclarations } from '../../utils/ast_utils';
+import { getTopLevelDeclarations } from '../ast_helper';
 import { Emitter, EmitterInput, ParsedFile } from '../emitter';
 import { emitConstDeclaration, emitEnum } from './js_shared/emit_enum';
 import { emitExpression, emitIdentifier, emitTypeExpression } from './js_shared/emit_expression';
@@ -74,7 +74,7 @@ export class JsClientEmitter extends Emitter {
             } else if (statement.nodeType === 'constDeclaration' && (statement as ConstDeclaration).isExported) {
                 lines.push(emitConstDeclaration(statement as ConstDeclaration, false));
             } else if (statement.nodeType === 'messageDeclaration') {
-                lines.push(emitMessageFactory(statement as MessageDeclaration));
+                lines.push(emitMessageFactory(statement as MessageDeclaration, this.resolveImport));
             }
         }
         return lines.join('\n');
@@ -162,7 +162,7 @@ export class JsClientEmitter extends Emitter {
 
         lines.push([`declare module "${input.emitConfig.namespace}" {`]);
         for (const file of input.files) {
-            const declarations = getDeclarations(file.ast);
+            const declarations = getTopLevelDeclarations(file.ast);
             for (const declaration of declarations) {
                 if (declaration.isExported) {
                     lines.push(`    ${emitExported(declaration, true)}{ ${declaration.identifier.value} } from "${this.createNamespace(file.path)}";`);

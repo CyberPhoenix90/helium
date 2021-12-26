@@ -1,5 +1,7 @@
 import { ArrayTypeReference, Identifier, MessageDeclaration, MessageMember, OneOfMessageMember, TypeLiteral, TypeReference } from '../../../parsing/ast/ast';
-import { emitLiteral, emitTypeExpression } from './emit_expression';
+import { identifierToDeclaration } from '../../ast_helper';
+import { ParsedFile } from '../../emitter';
+import { emitTypeExpression } from './emit_expression';
 
 export function emitMessageFactoryDts(ast: MessageDeclaration): string {
     return `	export const ${ast.identifier.value}Factory:HeliumMessageFactory<${ast.identifier.value}>;`;
@@ -15,11 +17,11 @@ export function emitMessageDeclaration(ast: MessageDeclaration): string {
 }`;
 }
 
-function emitExtends(ext: Identifier[]): string {
-    if (!ext?.length) {
+function emitExtends(ext: Identifier): string {
+    if (!ext) {
         return '';
     } else {
-        return ` extends ${ext.map(emitLiteral).join(', ')}`;
+        return ` extends ${ext.value}`;
     }
 }
 
@@ -39,18 +41,18 @@ function emitOptional(isOptional: boolean): string {
     return isOptional ? '?' : '';
 }
 
-export function emitMessageFactory(ast: MessageDeclaration): string {
+export function emitMessageFactory(ast: MessageDeclaration, resolveImport: (src: string, path: string) => ParsedFile): string {
     return `	exports.${ast.identifier.value}Factory = {
     validate() {
 
     },
     fromBinary(binaryReader, result = {}) {
-        ${emitMessageFactoryFromBinary(ast)}
+        ${emitMessageFactoryFromBinary(ast, resolveImport)}
         exports.${ast.identifier.value}Factory.validate(result);
         return result;
     },
     toBinary(message, binaryWriter) {
-        ${emitMessageFactoryToBinary(ast)}
+        ${emitMessageFactoryToBinary(ast, resolveImport)}
     },
     fromJson(json) {
         return ${ast.identifier.value}Factory.createInstance(JSON.parse(json));
@@ -65,7 +67,7 @@ export function emitMessageFactory(ast: MessageDeclaration): string {
 };\n`;
 }
 
-function emitMessageFactoryToBinary(ast: MessageDeclaration): string {
+function emitMessageFactoryToBinary(ast: MessageDeclaration, resolveImport: (src: string, path: string) => ParsedFile): string {
     const lines = [];
     for (const member of ast.members.sort((a, b) => a.fieldNumber - b.fieldNumber)) {
         if (member.nodeType === 'oneOfMessageMember') {
@@ -74,10 +76,18 @@ function emitMessageFactoryToBinary(ast: MessageDeclaration): string {
             lines.push(emitMessageMemberToBinary(member));
         }
     }
+    if (ast.extends) {
+        // Message continuation marker
+        lines.push(`binaryWriter.writeByte(1);`);
+        lines.push(emitMessageFactoryToBinary(identifierToDeclaration(ast.extends, resolveImport) as MessageDeclaration, resolveImport));
+    } else {
+        // Message end marker
+        lines.push(`binaryWriter.writeByte(0);`);
+    }
     return lines.join('\n');
 }
 
-function emitMessageFactoryFromBinary(ast: MessageDeclaration): string {
+function emitMessageFactoryFromBinary(ast: MessageDeclaration, resolveImport: (src: string, path: string) => ParsedFile): string {
     const lines = [];
     for (const member of ast.members.sort((a, b) => a.fieldNumber - b.fieldNumber)) {
         if (member.nodeType === 'messageMember') {
@@ -86,6 +96,14 @@ function emitMessageFactoryFromBinary(ast: MessageDeclaration): string {
             lines.push(emitOneOfMessageMemberFromBinary(member as OneOfMessageMember));
         }
     }
+
+    if (ast.extends) {
+        lines.push('let hasExtendedData = binaryReader.readByte();');
+        lines.push('if(hasExtendedData == 1) {');
+        lines.push(emitMessageFactoryFromBinary(identifierToDeclaration(ast.extends, resolveImport) as MessageDeclaration, resolveImport));
+        lines.push('}');
+    }
+
     return lines.join('\n');
 }
 
@@ -246,7 +264,7 @@ function emitOneOfMessageMemberToBinary(ast: OneOfMessageMember): string {
 
 function emitReadType(typeValue: TypeReference, prefix: string): string {
     if (typeValue.type === undefined) {
-        return `${prefix}exports.${typeValue.identifier.value}Factory.fromBinary(binaryReader, result)`;
+        return `${prefix}exports.${typeValue.identifier.value}Factory.fromBinary(binaryReader)`;
     }
 
     switch (typeValue.type) {

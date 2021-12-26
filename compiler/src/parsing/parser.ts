@@ -2,6 +2,7 @@ import {
     Annotation,
     ArrayExpression,
     ArrayTypeReference,
+    ASTNode,
     ASTRoot,
     BinaryExpression,
     CallExpression,
@@ -33,6 +34,7 @@ export function parser(input: TokenStream): ASTRoot {
 
     const root: ASTRoot = {
         root: undefined,
+        parent: undefined,
         character: 0,
         line: 0,
         file: input.file,
@@ -48,7 +50,18 @@ export function parser(input: TokenStream): ASTRoot {
         statements.push(statement);
     }
 
+    populateParentPointers(root);
+
     return root;
+}
+
+function populateParentPointers(root: ASTNode): void {
+    for (const child of root.children) {
+        child.parent = root;
+        if (child.children) {
+            populateParentPointers(child);
+        }
+    }
 }
 
 function isOperation(input: TokenStream, operation?: string): boolean {
@@ -183,6 +196,7 @@ function parseReexport(input: TokenStream, root: ASTRoot): Reexport {
     }
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -202,6 +216,7 @@ function parseTypeAliasDeclaration(input: TokenStream, root: ASTRoot, isExported
     skipPunctuation(input, ';');
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -227,6 +242,7 @@ function parseServiceDeclaration(input: TokenStream, root: ASTRoot, isExported: 
     skipPunctuation(input, '}');
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         isClient,
         line: startLine,
@@ -294,6 +310,7 @@ function parseServiceApiCall(input: TokenStream, root: ASTRoot, annotations: Ann
     return {
         character: startCharacter,
         root,
+        parent: undefined,
         protocol,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -317,6 +334,7 @@ function parseEnumDeclaration(input: TokenStream, root: ASTRoot, isExported: boo
     skipPunctuation(input, '}');
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -351,6 +369,7 @@ function parseEnumMember(input: TokenStream, root: ASTRoot): EnumMember {
     }
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -366,28 +385,32 @@ function parseMessageDeclaration(input: TokenStream, root: ASTRoot, isExported: 
     skipKeyword(input, 'message');
     const identifier = parseIdentifier(input, root);
 
-    const extendsIdentifiers: Identifier[] = [];
+    let extendsIdentifier: Identifier;
     if (isKeyword(input, 'extends')) {
         skipKeyword(input, 'extends');
-        do {
-            extendsIdentifiers.push(parseIdentifier(input, root));
-        } while (isPunctuation(input, ',') && (skipPunctuation(input, ','), true));
+        extendsIdentifier = parseIdentifier(input, root);
     }
 
     skipPunctuation(input, '{');
     const fields = parseFields(input, root);
     skipPunctuation(input, '}');
+
+    const children: ASTNode[] = [identifier];
+    if (extendsIdentifier) [children.push(extendsIdentifier)];
+    children.push(...fields);
+
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
-        extends: extendsIdentifiers,
+        extends: extendsIdentifier,
         identifier,
         members: fields,
         nodeType: 'messageDeclaration',
         isExported,
-        children: [identifier, ...extendsIdentifiers, ...fields],
+        children,
     };
 }
 
@@ -441,6 +464,7 @@ function parseField(input: TokenStream, root: ASTRoot): MessageMember | OneOfMes
         skipPunctuation(input, ';');
         return {
             root,
+            parent: undefined,
             character: startCharacter,
             line: startLine,
             text: input.source.substring(startIndex, input.getCarret().index),
@@ -463,6 +487,7 @@ function parseAnnotation(input: TokenStream, root: ASTRoot): Annotation {
     const args = parseCallArguments(input, root);
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -495,6 +520,7 @@ function parseLiteral(input: TokenStream, root: ASTRoot): Literal {
 
     return {
         root,
+        parent: undefined,
         nodeType: 'literal',
         character: startCharacter,
         line: startLine,
@@ -548,6 +574,7 @@ function parseExpression(input: TokenStream, root: ASTRoot): Expression {
                 return buildExpression(input, root, {
                     nodeType: 'callExpression',
                     character: startCharacter,
+                    children: [],
                     line: startLine,
                     text: input.source.substring(startIndex, input.getCarret().index),
                     arguments: args,
@@ -558,6 +585,7 @@ function parseExpression(input: TokenStream, root: ASTRoot): Expression {
                 return buildExpression(input, root, {
                     nodeType: 'identifier',
                     root,
+                    children: [],
                     character: startCharacter,
                     line: startLine,
                     text: input.source.substring(startIndex, input.getCarret().index),
@@ -586,6 +614,7 @@ function buildExpression(input: TokenStream, root: ASTRoot, left: Literal | Expr
     if (isOperation(input)) {
         return {
             nodeType: 'binaryExpression',
+            children: [],
             root,
             left,
             operation: input.next().value,
@@ -608,6 +637,7 @@ function parseIdentifier(input: TokenStream, root: ASTRoot): Identifier {
     } else {
         return {
             root,
+            parent: undefined,
             character: startCharacter,
             line: startLine,
             text: input.source.substring(startIndex, input.getCarret().index),
@@ -634,6 +664,7 @@ function parseTypeExpression(input: TokenStream, root: ASTRoot): TypeExpression 
             line: startLine,
             text: input.source.substring(startIndex, input.getCarret().index),
             nodeType: 'typeUnionExpression',
+            children: [],
             types: literals,
         } as TypeUnionExpression;
     }
@@ -644,6 +675,7 @@ function parseTypeLiteral(input: TokenStream, root: ASTRoot): TypeLiteral {
     const type = parseType(input, root);
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -677,6 +709,7 @@ function parseType(input: TokenStream, root: ASTRoot): TypeReference | ArrayType
 
     let baseType: TypeReference = {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -733,6 +766,7 @@ function parseImportSpecifier(input: TokenStream, root: ASTRoot): ImportSpecifie
     return {
         character: startCharacter,
         root,
+        parent: undefined,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
         nodeType: 'importSpecifier',
@@ -765,6 +799,7 @@ function parseImport(input: TokenStream, root: ASTRoot): ImportStatement {
         character: startCharacter,
         line: startLine,
         root,
+        parent: undefined,
         text: input.source.substring(startIndex, input.getCarret().index),
         nodeType: 'import',
         importedFilePath: path.value,
@@ -784,6 +819,7 @@ function parseConstDeclaration(input: TokenStream, root: ASTRoot, isExported: bo
     skipPunctuation(input, ';');
     return {
         root,
+        parent: undefined,
         character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
@@ -808,8 +844,9 @@ function parseArray(input: TokenStream, root: ASTRoot): ArrayExpression {
     }
     skipPunctuation(input, ']');
     return {
-        character: startCharacter,
         root,
+        parent: undefined,
+        character: startCharacter,
         line: startLine,
         text: input.source.substring(startIndex, input.getCarret().index),
         nodeType: 'arrayExpression',

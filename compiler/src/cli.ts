@@ -1,4 +1,4 @@
-#!/bin/node
+#!/usr/bin/env node
 
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -9,10 +9,10 @@ import { processCompilerConfig } from './config/config';
 const args = parseArguments(process.argv.slice(2));
 
 if (!args.map.p && !args.map.project) {
-	const path = join(process.cwd(), 'heconfig.json');
-	if (existsSync(path)) {
-		args.map.p = 'heconfig.json';
-	}
+    const path = join(process.cwd(), 'heconfig.json');
+    if (existsSync(path)) {
+        args.map.p = 'heconfig.json';
+    }
 }
 
 const compilerConfig = processCompilerConfig(args);

@@ -16,6 +16,6 @@ app.post('/helium/helium_test_client/MyService/reportMetric', (req, res) => {
 
 app.use(express.static(join(__dirname, '../../example_js_client')));
 
-app.listen(3000, () => {
+app.listen(3000, '0.0.0.0', () => {
     console.log('listening on port 3000');
 });
