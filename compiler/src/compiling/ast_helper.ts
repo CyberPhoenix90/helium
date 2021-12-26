@@ -12,16 +12,18 @@ import {
 } from '../parsing/ast/ast';
 import { ParsedFile } from './emitter';
 
-export function identifierToDeclaration(identifier: Identifier, resolveImport: (src: string, path: string) => ParsedFile): Declarations {
+export function identifierToDeclaration(identifier: Identifier, resolveImport?: (src: string, path: string) => ParsedFile): Declarations {
     for (const declaration of iterateDeclarationsThroughScope(identifier)) {
         if (declaration.identifier.value === identifier.value) {
             return declaration;
         }
     }
 
-    for (const declaration of iterateImportedDeclarations(identifier.root, resolveImport)) {
-        if (declaration.identifier.value === identifier.value) {
-            return declaration;
+    if (resolveImport) {
+        for (const declaration of iterateImportedDeclarations(identifier.root, resolveImport)) {
+            if (declaration.identifier.value === identifier.value) {
+                return declaration;
+            }
         }
     }
 

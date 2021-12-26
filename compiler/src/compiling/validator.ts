@@ -1,18 +1,17 @@
-import { CompilerConfig } from '../config/config';
 import { ASTNode, Identifier, ImportStatement, MessageDeclaration, MessageMember, OneOfMessageMember } from '../parsing/ast/ast';
 import { getTopLevelDeclarations, identifierToDeclaration, iterateAST } from './ast_helper';
 import { CompileError } from './compile_error';
 import { ParsedFile } from './emitter';
 
-export function validate(input: ParsedFile[], compilerConfig: CompilerConfig, resolveImport: (src: string, path: string) => ParsedFile): ParsedFile[] {
+export function validateParsedFiles(input: ParsedFile[], resolveImport: (src: string, path: string) => ParsedFile): ParsedFile[] {
     for (const file of input) {
-        validateFile(file, compilerConfig, resolveImport);
+        validateParsedFile(file, resolveImport);
     }
 
     return input;
 }
 
-export function validateFile(file: ParsedFile, compilerConfig: CompilerConfig, resolveImport: (src: string, path: string) => ParsedFile): void {
+export function validateParsedFile(file: ParsedFile, resolveImport?: (src: string, path: string) => ParsedFile): void {
     const { ast, path } = file;
 
     validateIdentifiers(ast, resolveImport);
@@ -20,7 +19,7 @@ export function validateFile(file: ParsedFile, compilerConfig: CompilerConfig, r
     for (const statement of ast.statements) {
         switch (statement.nodeType) {
             case 'messageDeclaration':
-                validateMessageDeclaration(statement as MessageDeclaration, compilerConfig, resolveImport);
+                validateMessageDeclaration(statement as MessageDeclaration);
                 break;
             case 'import':
                 try {
@@ -62,7 +61,7 @@ function validateIdentifiers(ast: ASTNode, resolveImport: (src: string, path: st
     }
 }
 
-function validateMessageDeclaration(message: MessageDeclaration, compilerConfig: CompilerConfig, resolveImport: (src: string, path: string) => ParsedFile) {
+function validateMessageDeclaration(message: MessageDeclaration) {
     const { members } = message;
     validateMessages(members);
 }

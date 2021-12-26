@@ -10,7 +10,7 @@ import { CILClientEmitter } from './targets/cil_client_emitter';
 import { JsClientEmitter } from './targets/js_client_emitter';
 import { JsServerEmitter } from './targets/js_server_emitter';
 import { JVMClientEmitter } from './targets/jvm_client_emitter';
-import { validate } from './validator';
+import { validateParsedFiles } from './validator';
 
 export class Compiler {
     private cwd: string;
@@ -58,7 +58,7 @@ export class Compiler {
     }
 
     public validate(): void {
-        validate(this.projectContent, this.config, this.resolveImport.bind(this));
+        validateParsedFiles(this.projectContent, this.resolveImport.bind(this));
     }
 
     public emit(): void {
@@ -197,4 +197,19 @@ function readDirRecursive(path: string): string[] {
         }
     }
     return files;
+}
+
+export function parseFile(file: string): ParsedFile {
+    const source = readFileSync(file, 'utf8');
+    return {
+        path: file,
+        ast: parser(lexer(new InputStream(source, file))),
+    };
+}
+
+export function parseCode(code: string, file?: string): ParsedFile {
+    return {
+        path: file ?? 'anonymous',
+        ast: parser(lexer(new InputStream(code, file ?? 'anonymous'))),
+    };
 }
