@@ -27,6 +27,10 @@ message SubMessage extends ExternalTestMessage {
     1 -> someField:int;
 }
 
+message KeywordTest {
+    1 -> type:int;
+}
+
 //Comments
 export enum MyEnum {
     a = 1;

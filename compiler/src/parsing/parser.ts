@@ -632,7 +632,7 @@ function parseIdentifier(input: TokenStream, root: ASTRoot): Identifier {
         unexpected(input, 'identifier', 'eof');
     }
 
-    if (token.type !== 'identifier') {
+    if (token.type !== 'identifier' && token.type !== 'keyword') {
         unexpected(input, 'identifier', token.value);
     } else {
         return {
