@@ -29,6 +29,7 @@ message SubMessage extends ExternalTestMessage {
 
 message KeywordTest {
     1 -> type:int;
+    2 -> creationTime:date;
 }
 
 //Comments

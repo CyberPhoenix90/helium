@@ -110,6 +110,8 @@ function emitReadType(typeValue: TypeReference, prefix: string): string {
             return `${prefix}binaryReader.readBoolean()`;
         case 'byte':
             return `${prefix}binaryReader.readByte()`;
+        case 'date':
+            return `${prefix}new Date(binaryReader.readUInt64())`;
         default:
             throw new Error(`Unsupported type ${typeValue.type} in ${typeValue.text}`);
     }

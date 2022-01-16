@@ -110,6 +110,8 @@ function emitWriteType(type: TypeReference, value: string, fieldName: string): s
             return `binaryWriter.writeString(${value});`;
         case 'byte':
             return `binaryWriter.writeByte(${value});`;
+        case 'date':
+            return `binaryWriter.writeInt64(${value}.getTime());`;
         default:
             throw new Error(`Unknown type ${type.type}`);
     }
