@@ -1,5 +1,5 @@
-import { ConstDeclaration, EnumDeclaration } from '../../../parsing/ast/ast';
-import { emitExpression, emitLiteral, emitTypeExpression } from './emit_expression';
+import { EnumDeclaration } from '../../../parsing/ast/ast';
+import { emitLiteral } from './emit_expression';
 import { emitExported } from './emit_message';
 
 export function emitEnum(ast: EnumDeclaration, dts: boolean): string {
@@ -12,10 +12,4 @@ ${ast.members.map((m) => `    ${m.identifier.value} = ${emitLiteral(m.value)}`).
 ${ast.members.map((m) => `	    ${m.identifier.value}: ${emitLiteral(m.value)}`).join(',\n')}
 	}\n`;
     }
-}
-
-export function emitConstDeclaration(ast: ConstDeclaration, dts: boolean): string {
-    return `	${emitExported(ast, dts)}${dts ? 'const ' : ''}${ast.identifier.value}${dts ? `: ${emitTypeExpression(ast.type)}` : ''}${
-        dts ? '' : ` = ${emitExpression(ast.value)};`
-    }`;
 }

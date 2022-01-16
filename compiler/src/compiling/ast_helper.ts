@@ -6,6 +6,7 @@ import {
     EnumDeclaration,
     Identifier,
     ImportStatement,
+    Literal,
     MessageDeclaration,
     ServiceDeclaration,
     TypeAliasDeclaration,
@@ -28,6 +29,25 @@ export function identifierToDeclaration(identifier: Identifier, resolveImport?: 
     }
 
     return undefined;
+}
+
+export function resolveExpressionValue(expression: Literal | Identifier, resolveImport?: (src: string, path: string) => ParsedFile): any {
+    if (expression.nodeType === 'identifier') {
+        const declaration = identifierToDeclaration(expression, resolveImport);
+        if (declaration && declaration.nodeType === 'constDeclaration') {
+            if ((declaration as ConstDeclaration).value.nodeType === 'identifier') {
+                return resolveExpressionValue((declaration as ConstDeclaration).value as Identifier);
+            } else if ((declaration as ConstDeclaration).value.nodeType === 'literal') {
+                return ((declaration as ConstDeclaration).value as Literal).value;
+            } else {
+                throw new Error(`Value resolution for ${(declaration as ConstDeclaration).value.nodeType} expression not implemented`);
+            }
+        } else {
+            return undefined;
+        }
+    }
+
+    return expression.value;
 }
 
 export function* iterateImportedDeclarations(ast: ASTRoot, resolveImport: (src: string, path: string) => ParsedFile): Iterable<Declarations> {

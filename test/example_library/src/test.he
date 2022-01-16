@@ -30,7 +30,10 @@ message SubMessage extends ExternalTestMessage {
 message KeywordTest {
     1 -> type:int;
     2 -> creationTime:date;
+    3 -> duration:int = timespan('24 minutes 30 seconds');
 }
+
+export const time:int = timespan('5 minutes 30 seconds');
 
 //Comments
 export enum MyEnum {

@@ -14,7 +14,8 @@ import {
 } from '../../parsing/ast/ast';
 import { getTopLevelDeclarations } from '../ast_helper';
 import { Emitter, EmitterInput, ParsedFile } from '../emitter';
-import { emitConstDeclaration, emitEnum } from './js_shared/emit_enum';
+import { emitConstDeclaration } from './js_shared/emit_const';
+import { emitEnum } from './js_shared/emit_enum';
 import { emitExpression, emitIdentifier, emitTypeExpression } from './js_shared/emit_expression';
 import { emitExported, emitMessageDeclaration, emitMessageFactory, emitMessageFactoryDts } from './js_shared/emit_message';
 import { emitPackageJson } from './js_shared/emit_packagejson';
@@ -72,7 +73,7 @@ export class JsClientEmitter extends Emitter {
             } else if (statement.nodeType === 'enumDeclaration' && (statement as EnumDeclaration).isExported) {
                 lines.push(emitEnum(statement as EnumDeclaration, false));
             } else if (statement.nodeType === 'constDeclaration' && (statement as ConstDeclaration).isExported) {
-                lines.push(emitConstDeclaration(statement as ConstDeclaration, false));
+                lines.push(emitConstDeclaration(statement as ConstDeclaration, false, this.resolveImport));
             } else if (statement.nodeType === 'messageDeclaration') {
                 lines.push(emitMessageFactory(statement as MessageDeclaration, this.resolveImport));
             }
@@ -191,7 +192,7 @@ export class JsClientEmitter extends Emitter {
                     lines.push(emitEnum(statement as EnumDeclaration, true));
                     break;
                 case 'constDeclaration':
-                    lines.push(emitConstDeclaration(statement as ConstDeclaration, true));
+                    lines.push(emitConstDeclaration(statement as ConstDeclaration, true, this.resolveImport));
                     break;
                 case 'messageDeclaration':
                     lines.push(emitMessageDeclaration(statement as MessageDeclaration));
@@ -247,7 +248,7 @@ export class JsClientEmitter extends Emitter {
     private emitServiceConstant(constant: ConstDeclaration, dts: boolean): string {
         return `	${dts ? `public ` : ``}static ${dts ? `readonly ` : ``} ${emitIdentifier(constant.identifier)}${
             dts ? `: ${emitTypeExpression(constant.type)}` : ''
-        } ${dts ? '' : ` = ${emitExpression(constant.value)}`};`;
+        } ${dts ? '' : ` = ${emitExpression(constant.value, this.resolveImport)}`};`;
     }
 
     private emitServiceApiCall(serviceName: string, call: ServiceApiCall, dts: boolean): string {
