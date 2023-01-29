@@ -89,7 +89,7 @@ export interface BinaryExpression extends Expression {
     operation: string;
 }
 export interface TypeExpression extends ASTNode {
-    nodeType: 'typeUnionExpression' | 'typeLiteralExpression';
+    nodeType: 'typeUnionExpression' | 'typeLiteralExpression' | 'identifier';
 }
 
 export interface TypeLiteral extends TypeExpression {

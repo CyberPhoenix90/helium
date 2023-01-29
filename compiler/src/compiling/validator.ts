@@ -15,6 +15,7 @@ export function validateParsedFile(file: ParsedFile, resolveImport?: (src: strin
     const { ast, path } = file;
 
     validateIdentifiers(ast, resolveImport);
+    validateTypeIdentifiers(ast, resolveImport);
 
     for (const statement of ast.statements) {
         switch (statement.nodeType) {
